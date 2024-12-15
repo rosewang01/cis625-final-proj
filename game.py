@@ -63,8 +63,8 @@ class Game:
         if (self.num_actions[0] < 2 or self.num_actions[1] < 2):
             raise ValueError("Both players must have at least two actions.")
         
-        player_1_payoffs = np.array([[0, 1], [-1, -10]])
-        player_2_payoffs = np.array([[0, -1], [1, -10]])
+        player_1_payoffs = np.array([[0, -1], [1, -10]])
+        player_2_payoffs = np.array([[0, 1], [-1, -10]])
 
         payoff_matrices.append(player_1_payoffs)
         payoff_matrices.append(player_2_payoffs)

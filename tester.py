@@ -1,4 +1,3 @@
-from os import O_RANDOM
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
@@ -134,26 +133,37 @@ def benchmark_solvers(game, solvers, welfare_func):
 
 def main():
     file_path = "benchmarking.csv"
-    game = Game(2, [2, 2], game_type=Game.RANDOM)
+    game = Game(2, [2, 2], game_type=Game.CHICKEN)
+    print(game, '\n')
 
     lp_solver = LinearProgrammingSolver(game)
     lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-    sr_solver = SwapRegretSolver(game, T=1000, learning_rate=0.1)
 
-    solvers = [lp_solver, lp_welfare_solver, sr_solver]
 
-    results = benchmark_solvers(game, solvers, social_welfare)
+    print(lp_welfare_solver.solve())
 
-    # log results
-    with open(file_path, "w") as f:
-        f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
-        for solver, result in results.items():
-            runtime = result["runtime"]
-            violations = len(result["violations"])
-            welfare = result["welfare"]
-            f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
+    
+    # file_path = "benchmarking.csv"
+    # game = Game(2, [2, 2], game_type=Game.RANDOM)
 
-    print("Benchmarking complete. Results logged to benchmarking.csv.")
+    # lp_solver = LinearProgrammingSolver(game)
+    # lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
+    # sr_solver = SwapRegretSolver(game, T=1000, learning_rate=0.1)
+
+    # solvers = [lp_solver, lp_welfare_solver, sr_solver]
+
+    # results = benchmark_solvers(game, solvers, social_welfare)
+
+    # # log results
+    # with open(file_path, "w") as f:
+    #     f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
+    #     for solver, result in results.items():
+    #         runtime = result["runtime"]
+    #         violations = len(result["violations"])
+    #         welfare = result["welfare"]
+    #         f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
+
+    # print("Benchmarking complete. Results logged to benchmarking.csv.")
 
 if __name__ == "__main__":
     main()
