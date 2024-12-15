@@ -1,8 +1,8 @@
 import numpy as np
 from pulp import LpProblem, LpMaximize, LpVariable, lpSum
 
-class LPSolver:
-    def __init__(self, game):
+class LinearProgrammingSolver:
+    def __init__(self, game, maximize_welfare=False):
         """
         Initialize the solver with a NormalFormGame instance.
 
@@ -10,8 +10,14 @@ class LPSolver:
         - game (NormalFormGame): An instance of the NormalFormGame class.
         """
         self.game = game
+        self.maximize_welfare = maximize_welfare
 
-    def find_correlated_equilibrium(self, maximize_welfare=False):
+    def get_name(self):
+        if self.maximize_welfare:
+            return "Linear Programming - Social Welfare"
+        return "Linear Programming"
+
+    def solve(self):
         """
         Find a correlated equilibrium using linear programming.
 
@@ -25,7 +31,7 @@ class LPSolver:
         all_actions = np.ndindex(joint_action_space)
         prob_vars = {action: LpVariable(f"p_{action}", lowBound=0) for action in all_actions}
 
-        prob = LpProblem("CorrelatedEquilibrium", LpMaximize if maximize_welfare else LpProblem)
+        prob = LpProblem("CorrelatedEquilibrium", LpMaximize)
 
         prob += lpSum(prob_vars.values()) == 1
 
@@ -43,7 +49,7 @@ class LPSolver:
                                                self.game.payoff_matrices[player][joint_action_alt]) * prob_var
                         prob += constraint >= 0
 
-        if maximize_welfare:
+        if self.maximize_welfare:
             prob += lpSum(
                 prob_var * sum(self.game.payoff_matrices[player][joint_action]
                                 for player in range(self.game.num_players))

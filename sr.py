@@ -1,6 +1,6 @@
 import numpy as np
 
-class SRSolver:
+class SwapRegretSolver:
     def __init__(self, game, T=10000, learning_rate=0.1):
         """
         Initialize the Swap Regret Solver.
@@ -15,6 +15,9 @@ class SRSolver:
         self.learning_rate = learning_rate
         self.num_players = game.num_players
         self.num_actions = game.num_actions
+
+    def get_name(self):
+        return "Swap Regret"
 
     def solve(self):
         """
@@ -42,7 +45,7 @@ class SRSolver:
                         if temp_action_profile[player] == current_action:
                             temp_action_profile[player] = swap_action
                             temp_action_profile = tuple(temp_action_profile)
-                            cumulative_rewards[player][current_action, swap_action] += self.game.payoff_matrices[player][temp_action_profile]
+                            cumulative_rewards[player][current_action, swap_action] += payoffs[player]
 
             for player in range(self.num_players):
                 expected_regret = np.zeros(self.num_actions[player])
