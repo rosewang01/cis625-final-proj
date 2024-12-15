@@ -1,9 +1,10 @@
+from os import O_RANDOM
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 import time
 from collections import defaultdict
-from rnfgame import NormalFormGame
+from game import Game
 from lp import LinearProgrammingSolver
 from sr import SwapRegretSolver
 
@@ -133,7 +134,7 @@ def benchmark_solvers(game, solvers, welfare_func):
 
 def main():
     file_path = "benchmarking.csv"
-    game = NormalFormGame(2, [2, 2])
+    game = Game(2, [2, 2], game_type=Game.RANDOM)
 
     lp_solver = LinearProgrammingSolver(game)
     lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
