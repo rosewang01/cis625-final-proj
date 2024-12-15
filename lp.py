@@ -28,19 +28,14 @@ class LinearProgrammingSolver:
         Returns:
         - dict: A dictionary of joint action probabilities.
         """
-        # Create the LP problem
         prob = pulp.LpProblem("Correlated_Equilibrium", pulp.LpMaximize)
 
-        # Define the joint action profiles
-        action_profiles = list(itertools.product(*[range(n) for n in self.game.num_actions]))
+        action_profiles = self.game.get_action_profiles()
         
-        # Define the distribution p over joint action profiles
         p = pulp.LpVariable.dicts("p", action_profiles, lowBound=0, upBound=1)
 
-        # Constraint 1: Probabilities must sum to 1
         prob += pulp.lpSum([p[a] for a in action_profiles]) == 1, "Normalization"
 
-        # Constraint 2: Expected payoff constraints for correlated equilibrium
         for i in range(self.game.num_players):
             for a_i in range(self.game.num_actions[i]):
                 for b_i in range(self.game.num_actions[i]):
@@ -57,7 +52,6 @@ class LinearProgrammingSolver:
                         f"Player_{i}_Action_{a_i}_to_{b_i}"
                     )
 
-        # Objective: Maximize welfare if specified, otherwise dummy objective
         if self.maximize_welfare:
             prob += pulp.lpSum(
                 p[a] * sum(self.game.payoff_matrices[i][a] for i in range(self.game.num_players)) for a in action_profiles
@@ -65,16 +59,15 @@ class LinearProgrammingSolver:
         else:
             prob += 0, "Dummy_Objective"
 
-        # Solve the problem
         status = prob.solve()
 
-        for i in range(self.game.num_players):
-            for a_i in range(self.game.num_actions[i]):
-                for b_i in range(self.game.num_actions[i]):
-                    if a_i != b_i:
-                        lhs = sum(pulp.value(p[a]) * self.game.payoff_matrices[i][a] for a in action_profiles if a[i] == a_i)
-                        rhs = sum(pulp.value(p[a]) * self.game.payoff_matrices[i][a[:i] + (b_i,) + a[i + 1:]] for a in action_profiles if a[i] == a_i)
-                        print(f"Player {i}, Action {a_i} -> {b_i}: LHS={lhs:.4f}, RHS={rhs:.4f}")
+        # for i in range(self.game.num_players):
+        #     for a_i in range(self.game.num_actions[i]):
+        #         for b_i in range(self.game.num_actions[i]):
+        #             if a_i != b_i:
+        #                 lhs = sum(pulp.value(p[a]) * self.game.payoff_matrices[i][a] for a in action_profiles if a[i] == a_i)
+        #                 rhs = sum(pulp.value(p[a]) * self.game.payoff_matrices[i][a[:i] + (b_i,) + a[i + 1:]] for a in action_profiles if a[i] == a_i)
+        #                 print(f"Player {i}, Action {a_i} -> {b_i}: LHS={lhs:.4f}, RHS={rhs:.4f}")
 
         if pulp.LpStatus[status] == "Optimal":
             # Return the solution as a dictionary
@@ -82,7 +75,6 @@ class LinearProgrammingSolver:
         else:
             return None
 
-        r
     def print_correlated_equilibrium(self, correlated_eq):
         """
         Print the correlated equilibrium in a readable format.

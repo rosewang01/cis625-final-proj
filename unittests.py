@@ -11,18 +11,16 @@ def chicken_test():
     distribution = solver.solve()
     print(distribution)
     violations = collect_violations(game, distribution)
-    # visualize_violations_heatmap(game, violations)
     return violations
 
 def congestion_test():
     num_players = 2
     num_actions = [2, 2]
-    game = Game(num_players, num_actions, game_type=Game.CONGESTION)
-    solver = LinearProgrammingSolver(game)
+    game = Game(num_players, num_actions, game_type=Game.CUSTOM, payoff_matrices=[np.array([[-5, -2], [-3, -6]]), np.array([[-5, -3], [-2, -6]])])
+    solver = LinearProgrammingSolver(game, maximize_welfare=True)
     distribution = solver.solve()
     print(distribution)
     violations = collect_violations(game, distribution)
-    visualize_violations_heatmap(game, violations)
     return violations
 
 def main():
@@ -31,4 +29,4 @@ def main():
     return chicken_violations, congestion_violations
 
 if __name__ == "__main__":
-    chicken_test()
+    main()

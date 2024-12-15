@@ -1,4 +1,5 @@
 import numpy as np
+import itertools
 
 class Game:
     """
@@ -82,13 +83,12 @@ class Game:
 
         for _ in range(self.num_players):
             payoff_matrix = np.zeros(joint_action_space)
-            for i in range(self.num_actions[0]):
-                for j in range(self.num_actions[1]):
-                    if i == j:
-                        payoff_matrix[i, j] = 0
-                    else:
-                        payoff_matrix[i, j] = -1 if i == 0 else -2
+            for action_profile in itertools.product(*[range(n) for n in self.num_actions]):
+                total_actions = sum(action_profile)
+                payoff_matrix[action_profile] = -total_actions
             payoff_matrices.append(payoff_matrix)
+
+        print(payoff_matrices)
 
         return payoff_matrices
 
@@ -118,6 +118,15 @@ class Game:
         - list[float]: A list of payoffs, one for each player.
         """
         return [self.payoff_matrices[player][actions] for player in range(self.num_players)]
+
+    def get_action_profiles(self):
+        """
+        Get all possible joint action profiles.
+
+        Returns:
+        - list[tuple[int]]: A list of all possible joint action profiles.
+        """
+        return list(itertools.product(*[range(n) for n in self.num_actions]))
 
     def __repr__(self):
         """String representation of the game."""

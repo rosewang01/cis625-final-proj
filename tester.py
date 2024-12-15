@@ -15,6 +15,7 @@ def collect_violations(game, distribution, epsilon=1e-6):
     - list[dict]: A list of violation records.
     """
     violations = []
+    action_profiles = game.get_action_profiles()
 
     if not np.isclose(sum(distribution.values()), 1.0, atol=epsilon):
         violations.append("The probabilities do not sum to 1.")
@@ -28,17 +29,16 @@ def collect_violations(game, distribution, epsilon=1e-6):
         for current_action in range(game.num_actions[player]):
             for alt_action in range(game.num_actions[player]):
                 if current_action != alt_action:
-                    lhs = 0
-                    rhs = 0
-                    for joint_action, prob in distribution.items():
-                        if prob > 0:
-                            payoff_current = game.payoff_matrices[player][joint_action]
-                            joint_action_alt = list(joint_action)
-                            joint_action_alt[player] = alt_action
-                            joint_action_alt = tuple(joint_action_alt)
-                            payoff_alt = game.payoff_matrices[player][joint_action_alt]
-                            lhs += prob * payoff_current
-                            rhs += prob * payoff_alt
+                    lhs = sum(
+                        distribution[action_profile] * game.payoff_matrices[player][action_profile]
+                        for action_profile in action_profiles
+                        if action_profile[player] == current_action
+                    )
+                    rhs = sum(
+                        distribution[action_profile] * game.payoff_matrices[player][action_profile[:player] + (alt_action,) + action_profile[player + 1:]]
+                        for action_profile in action_profiles
+                        if action_profile[player] == current_action
+                    )
                     if lhs < rhs - epsilon:
                         violations.append({
                             "player": player,
