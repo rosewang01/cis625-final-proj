@@ -118,6 +118,12 @@ class Game:
         - list[float]: A list of payoffs, one for each player.
         """
         return [self.payoff_matrices[player][actions] for player in range(self.num_players)]
+    
+    def get_payoff_matric(self, player):
+        """
+        Get the payoff matrix for a given player
+        """
+        return self.payoff_matrices[player]
 
     def __repr__(self):
         """String representation of the game."""
