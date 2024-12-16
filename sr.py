@@ -76,17 +76,24 @@ class SwapRegretPlayer:
         self.weights = self.weights / self.weights.sum(axis=1, keepdims=True)
         
         # Compute the stationary distibution of our MW matrix
-        self.p = self._stationary_distribution()
+        self.p = self._stationary_distribution(self.weights)
     
     # Helper method to calculate the stationary distribution of our k MW copies
-    def _stationary_distribution(self):
-        eigenvalues, eigenvectors = np.linalg.eig(self.weights.T)
-        # Find the eigenvector corresponding to eigenvalue 1
-        stationary = eigenvectors[:, np.isclose(eigenvalues, 1)]
+    def _stationary_distribution(self, Q):
+        # Dimensions of the matrix
+        n = Q.shape[0]
+        
+        # Transpose the weights matrix
+        Q_T = Q.T
 
-        stationary = stationary[:, 0]  # Take the first (and only) eigenvector
-        stationary = stationary / stationary.sum()  # Normalize to ensure sum = 1
-        return stationary.real
+        # Set up the augmented system to solve (Q^T - I)p = 0, with constraints on P
+        A = np.vstack([Q_T - np.eye(n), np.ones(n)])  # Augment with normalization constraint
+        b = np.zeros(n + 1)
+        b[-1] = 1  # Normalization constraint
+        
+        p = np.linalg.lstsq(A, b, rcond=None)[0]
+        
+        return np.clip(p, 0, None) 
 
     def __repr__(self):
         return (
