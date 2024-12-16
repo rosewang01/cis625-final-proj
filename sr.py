@@ -96,7 +96,7 @@ class SwapRegretPlayer:
 
 
 class SwapRegretSolver:
-    def __init__(self, game: Game, T=None, learning_rate=None, epsilon=0.01):
+    def __init__(self, game: Game, T=None, learning_rate=None, epsilon=0.1):
         """
         Initialize the Swap Regret Solver.
 
@@ -107,14 +107,20 @@ class SwapRegretSolver:
         """
         self.game = game
         self.T = T
-        self.epsilon = epsilon
+
+        # For a target epsilon-approx CE, adjust the solvers epsilon to be such that
+        # The algo will have epsilon regret after losses are converted back from [0,1] to payoffs
+        
+        max_transform_range = max([np.max(m) - np.min(m) for m in self.game.payoff_matrices])
+        self.adjusted_epsilon = epsilon / max_transform_range
+
         self.num_players = game.num_players
         self.num_actions = game.num_actions
 
         if T:
             self.T = T
         else:
-            self.T = int((4 * (np.max(self.num_actions) ** 2) * math.log(np.max(self.num_actions))) / (self.epsilon ** 2))
+            self.T = int((4 * (np.max(self.num_actions) ** 2) * math.log(np.max(self.num_actions))) / (self.adjusted_epsilon ** 2))
         
         if learning_rate:
             self.learning_rate = learning_rate
