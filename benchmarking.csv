@@ -1,4 +1,4 @@
-NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare
-2,2,Linear Programming,0.07650669998838566,0,0.0
-2,2,Linear Programming - Social Welfare,0.07526840001810342,0,0.0
-2,2,Swap Regret,53.12800920000882,2,-0.028132692533114522
+NPlayers,MaxNActions,Solver,Runtime,MaxViolation,NViolations,Welfare
+2,2,Linear Programming,0.15374370000790805,0,0,13.357287251066586
+2,2,Linear Programming - Social Welfare,0.17272579998825677,0,0,13.357287251066586
+2,2,Swap Regret,64.03361719998065,0.01797904045352021,1,13.303208910506754

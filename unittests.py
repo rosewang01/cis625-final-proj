@@ -20,7 +20,7 @@ def chicken_test():
     solver = SwapRegretSolver(game)
     distribution = solver.solve()
     print(distribution)
-    violations = collect_violations(game, distribution)
+    violations = collect_violations(game, distribution, epsilon=solver.epsilon)
     print(violations)
 
 def congestion_test():
@@ -38,7 +38,7 @@ def congestion_test():
     solver = SwapRegretSolver(game)
     distribution = solver.solve()
     print(distribution)
-    violations = collect_violations(game, distribution)
+    violations = collect_violations(game, distribution, epsilon=solver.epsilon)
     print(violations)
 
 def main():

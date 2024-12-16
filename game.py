@@ -23,13 +23,19 @@ class Game:
         self.num_actions = num_actions
 
         if game_type == Game.RANDOM:
+            self.game_type = Game.RANDOM
             self.payoff_matrices = self._generate_random_payoff_matrices()
         elif game_type == Game.CHICKEN:
+            self.game_type = Game.CHICKEN
             self.payoff_matrices = self._generate_chicken_payoff_matrices()
         elif game_type == Game.CONGESTION:
+            self.game_type = Game.CONGESTION
             self.payoff_matrices = self._generate_congestion_payoff_matrices()
         elif game_type == Game.CUSTOM and payoff_matrices is not None:
+            self.game_type = Game.CUSTOM
             self.payoff_matrices = self._generate_custom_payoff_matrices(payoff_matrices)
+        else:
+            raise ValueError("Invalid game type or missing payoff matrices.")
 
     def _generate_random_payoff_matrices(self):
         """
@@ -133,6 +139,18 @@ class Game:
         - list[tuple[int]]: A list of all possible joint action profiles.
         """
         return list(itertools.product(*[range(n) for n in self.num_actions]))
+    
+    def get_max_payoff_difference(self):
+        """
+        Get the maximum difference between payoffs in the game.
+
+        Returns:
+        - float: The maximum difference between payoffs in the game.
+        """
+        max_diff = 0
+        for player in range(self.num_players):
+            max_diff = max(max_diff, np.max(self.payoff_matrices[player]) - np.min(self.payoff_matrices[player]))
+        return max_diff
 
     def __repr__(self):
         """String representation of the game."""

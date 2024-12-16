@@ -138,6 +138,7 @@ class SwapRegretSolver:
         """
         empirical_distribution = {}
         action_counts = {}
+        print(f"Running Swap Regret Solver for {self.T} iterations...")
 
         for _ in range(self.T):
             # Sample actions for each player
