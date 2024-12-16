@@ -119,7 +119,7 @@ class Game:
         """
         return [self.payoff_matrices[player][actions] for player in range(self.num_players)]
     
-    def get_payoff_matric(self, player):
+    def get_payoff_matrix(self, player):
         """
         Get the payoff matrix for a given player
         """
