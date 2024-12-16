@@ -132,39 +132,27 @@ def benchmark_solvers(game, solvers, welfare_func):
 
 
 def main():
-    file_path = "benchmarking.csv"
     game = Game(2, [2, 2], game_type=Game.CHICKEN)
-    print(game, '\n')
 
     lp_solver = LinearProgrammingSolver(game)
     lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-
-    solver = SwapRegretSolver(game, T=1000)
-
-    print(solver.solve())
-
+    sr_solver = SwapRegretSolver(game)
     
-    # file_path = "benchmarking.csv"
-    # game = Game(2, [2, 2], game_type=Game.RANDOM)
+    solvers = [lp_solver, lp_welfare_solver, sr_solver]
 
-    # lp_solver = LinearProgrammingSolver(game)
-    # lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-    # sr_solver = SwapRegretSolver(game, T=1000, learning_rate=0.1)
+    results = benchmark_solvers(game, solvers, social_welfare)
 
-    # solvers = [lp_solver, lp_welfare_solver, sr_solver]
+    # log results
+    file_path = "benchmarking.csv"
+    with open(file_path, "w") as f:
+        f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
+        for solver, result in results.items():
+            runtime = result["runtime"]
+            violations = len(result["violations"])
+            welfare = result["welfare"]
+            f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
 
-    # results = benchmark_solvers(game, solvers, social_welfare)
-
-    # # log results
-    # with open(file_path, "w") as f:
-    #     f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
-    #     for solver, result in results.items():
-    #         runtime = result["runtime"]
-    #         violations = len(result["violations"])
-    #         welfare = result["welfare"]
-    #         f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
-
-    # print("Benchmarking complete. Results logged to benchmarking.csv.")
+    print("Benchmarking complete. Results logged to benchmarking.csv.")
 
 if __name__ == "__main__":
     main()

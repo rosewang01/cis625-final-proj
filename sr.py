@@ -27,7 +27,6 @@ class SwapRegretPlayer:
             normalized_matrix = (payoff_matrix - min_value) / (max_value - min_value)
         self.loss_matrix = 1 - normalized_matrix
 
-        print(self.loss_matrix)
         # Initialize weights for k copies of the Multiplicative Weights algorithm
         # Each row corresponds to the weights of a particular action being replaced with another action.
         self.weights = np.ones((num_actions, num_actions))
@@ -77,11 +76,11 @@ class SwapRegretPlayer:
         self.weights = self.weights / self.weights.sum(axis=1, keepdims=True)
         
         # Compute the stationary distibution of our MW matrix
-        self.p = self._stationary_distribution(self.weights);
+        self.p = self._stationary_distribution()
     
     # Helper method to calculate the stationary distribution of our k MW copies
-    def _stationary_distribution(self, Q):
-        eigenvalues, eigenvectors = np.linalg.eig(Q.T)
+    def _stationary_distribution(self):
+        eigenvalues, eigenvectors = np.linalg.eig(self.weights.T)
         # Find the eigenvector corresponding to eigenvalue 1
         stationary = eigenvectors[:, np.isclose(eigenvalues, 1)]
 
@@ -121,6 +120,7 @@ class SwapRegretSolver:
             self.learning_rate = learning_rate
         else:
             self.learning_rate = math.sqrt(math.log(np.max(self.num_actions))/self.T)
+    
         self.players = [
             SwapRegretPlayer(game.get_payoff_matrix(player), game.num_actions[player], player, eta=self.learning_rate)
             for player in range(self.num_players)
