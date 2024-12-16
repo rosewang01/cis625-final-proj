@@ -113,6 +113,7 @@ class SwapRegretSolver:
         - learning_rate (float): Step size for adjusting probabilities.
         """
         self.game = game
+        self.T = T
         self.epsilon = epsilon
 
         # For a target epsilon-approx CE, adjust the solvers epsilon to be such that
@@ -169,5 +170,9 @@ class SwapRegretSolver:
         # Normalize action counts to form the empirical distribution
         for action_profile, count in action_counts.items():
             empirical_distribution[action_profile] = count / self.T
+
+        for a in self.game.get_action_profiles():
+            if action_profile not in empirical_distribution:
+                empirical_distribution[a] = 0;
 
         return empirical_distribution
