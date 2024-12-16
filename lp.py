@@ -14,8 +14,10 @@ class LinearProgrammingSolver:
 
     def get_name(self):
         if self.maximize_welfare:
-            return "Linear Programming - Social Welfare"
-        return "Linear Programming"
+            return "Linear Programming-Maximize Welfare"
+        else:
+            return "Linear Programming"
+        
 
     def solve(self):
         """

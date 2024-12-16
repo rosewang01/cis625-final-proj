@@ -3,9 +3,6 @@ import seaborn as sns
 import numpy as np
 import time
 from collections import defaultdict
-from game import Game
-from lp import LinearProgrammingSolver
-from sr import SwapRegretSolver
 
 def collect_violations(game, distribution, epsilon=0.01):
     """
@@ -18,12 +15,12 @@ def collect_violations(game, distribution, epsilon=0.01):
     action_profiles = game.get_action_profiles()
 
     if not np.isclose(sum(distribution.values()), 1.0, atol=1e-6):
-        violations.append("The probabilities do not sum to 1.")
-        return violations
+        print(sum(distribution.values()))
+        raise ValueError("The distribution does not sum to 1.")
 
-    if any(prob < 0 for prob in distribution.values()):
-        violations.append("The distribution contains negative probabilities.")
-        return violations
+    if any(prob < -1e-4 for prob in distribution.values()):
+        print(distribution)
+        raise ValueError("The distribution contains negative probabilities.")
 
     for player in range(game.num_players):
         for current_action in range(game.num_actions[player]):
@@ -132,50 +129,3 @@ def benchmark_solvers(game, solvers, welfare_func):
         print(f"Runtime: {runtime:.4f} seconds")
 
     return results
-
-def get_results(game, welfare_func):
-    lp_solver = LinearProgrammingSolver(game)
-    lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-    sr_solver = SwapRegretSolver(game, epsilon=0.1)
-    
-    solvers = [lp_solver, lp_welfare_solver, sr_solver]
-
-    results = benchmark_solvers(game, solvers, social_welfare)
-    return results
-
-
-def main():
-    nplayers_arr = [2, 4, 7, 10]
-    nactions_arr = [2, 10, 25, 50]
-
-    file_path = "benchmarking.csv"
-    with open(file_path, "w") as f:
-        f.write("NPlayers,MaxNActions,Solver,Runtime,MaxViolation,NViolations,Welfare\n")
-    
-    for i in range(4):
-        print(f"Benchmarking for {nplayers_arr[i]} players and {nactions_arr[i]} actions...")
-        nplayers = nplayers_arr[i]
-        nactions = nactions_arr[i]
-        # for i in range(10):
-        game = Game(nplayers, [nactions] * nplayers, game_type=Game.RANDOM)
-        lp_solver = LinearProgrammingSolver(game)
-        lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-        sr_solver = SwapRegretSolver(game)
-
-        solvers = [lp_solver, lp_welfare_solver, sr_solver]
-
-        results = benchmark_solvers(game, solvers, social_welfare)
-
-        # log results
-        with open(file_path, "a") as f:
-            for solver, result in results.items():
-                max_violation = max([v["magnitude"] for v in result["violations"]]) if result["violations"] else 0
-                n_violations = len(result["violations"])
-                welfare = result["welfare"]
-                runtime = result["runtime"]
-                f.write(f"{nplayers},{nactions},{solver},{runtime},{max_violation},{n_violations},{welfare}\n")
-
-    print("Benchmarking complete. Results logged to benchmarking.csv.")
-
-if __name__ == "__main__":
-    main()
