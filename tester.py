@@ -139,8 +139,9 @@ def main():
     lp_solver = LinearProgrammingSolver(game)
     lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
 
+    solver = SwapRegretSolver(game, T=1000)
 
-    print(lp_welfare_solver.solve())
+    print(solver.solve())
 
     
     # file_path = "benchmarking.csv"
