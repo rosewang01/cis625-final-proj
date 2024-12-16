@@ -3,81 +3,54 @@ from game import Game
 
 class SwapRegretPlayer:
     def __init__(self, payoff_matrix, num_actions, player_index, eta=0.1):
-        """
-        Initialize the SwapRegretPlayer.
-
-        Parameters:
-        - payoff_matrix (np.ndarray): The payoff matrix indexed by tuples representing actions of all players.
-        - num_actions (int): The number of actions available to the player.
-        - player_index (int): The ID/index of the player with respect to the payoff matrix
-        - eta (float): Learning rate for the Multiplicative Weights algorithm.
-        """
         self.payoff_matrix = payoff_matrix
         self.num_actions = num_actions
-        self.eta = eta
         self.player_index = player_index
+        self.eta = eta
 
-        # Initialize weights for k copies of the Multiplicative Weights algorithm
-        # Each row corresponds to the weights of a particular action being replaced with another action.
-        self.weights = np.ones((num_actions, num_actions))
+        # Initialize a uniform probability distribution
+        self.p = np.ones(num_actions) / num_actions
         
-        # Initialize our meta-distribution actions
-        self.p = np.ones((num_actions)) / num_actions
+        # Initialize cumulative regrets
+        self.cumulative_regrets = np.zeros(num_actions)
 
     def sample_action(self):
         """
-        Sample an action based on the stationary distribution of the weight matrix Q.
-
-        Returns:
-        - action (int): The sampled action index.
+        Sample an action based on the stationary distribution.
         """
-        # Sample an action based on the stationary distribution
         return np.random.choice(self.num_actions, p=self.p)
 
     def update_distributions(self, action_profile):
         """
-        Update the player's weights based on the observed action profile.
-
-        Parameters:
-        - action_profile (tuple): The actions chosen by all players in the game.
+        Update the player's distribution based on the observed action profile.
         """
-        # Compute the loss vector l
         losses = np.zeros(self.num_actions)
+
         for i in range(self.num_actions):
-            # Replace this player's action in the action profile with action i
             modified_profile = list(action_profile)
             modified_profile[self.player_index] = i
             modified_profile = tuple(modified_profile)
-            
-            # Compute the negative payoff for playing action i
-            losses[i] = -self.payoff_matrix[modified_profile]
 
-        # Update weights for each copy of MW
-        for j in range(self.num_actions):
-            # Loss vector l scaled by p(j)
-            scaled_losses = losses * self.p[j]
-            
-            # Update the jth row of weights using the scaled losses
-            self.weights[j] -= (self.eta * scaled_losses)
-        
-        # Compute the stationary distibution of our MW matrix
-        self.p = self._stationary_distribution(self.weights);
-    
-    # Helper method to calculate the stationary distribution of our k MW copies
-    def _stationary_distribution(Q):
-        eigenvalues, eigenvectors = np.linalg.eig(Q.T)
-        # Find the eigenvector corresponding to eigenvalue 1
-        stationary = eigenvectors[:, np.isclose(eigenvalues, 1)]
-        stationary = stationary[:, 0]  # Take the first (and only) eigenvector
-        stationary = stationary / stationary.sum()  # Normalize to ensure sum = 1
-        return stationary.real
+            alt_payoff = self.payoff_matrix[modified_profile]
+            current_payoff = self.payoff_matrix[action_profile]
+
+            losses[i] = alt_payoff - current_payoff
+
+        self.cumulative_regrets += losses
+        positive_regrets = np.maximum(self.cumulative_regrets, 0)
+
+        # Update distribution using a softmax-like function
+        exp_regrets = np.exp(self.eta * positive_regrets - np.max(self.eta * positive_regrets))  # Stabilized softmax
+        self.p = exp_regrets / np.sum(exp_regrets)
+
+    def get_distribution(self):
+        """
+        Return the current probability distribution over actions.
+        """
+        return self.p
 
     def __repr__(self):
-        return (
-            f"SwapRegretPlayer(num_actions={self.num_actions}, eta={self.eta}, "
-            f"weights=\n{self.weights})"
-        )
-
+        return f"SwapRegretPlayer(num_actions={self.num_actions}, eta={self.eta}, distribution={self.p})"
 
 class SwapRegretSolver:
     def __init__(self, game: Game, T=10000, learning_rate=0.1):
@@ -92,11 +65,16 @@ class SwapRegretSolver:
         self.game = game
         self.T = T
         self.learning_rate = learning_rate
-        self.num_players = game.num_players
-        self.num_actions = game.num_actions
+        
+        # Create a SwapRegretPlayer for each player in the game
         self.players = [
-            SwapRegretPlayer(game.get_payoff_matrix(player), game.num_actions[player], player, eta=learning_rate)
-            for player in range(self.num_players)
+            SwapRegretPlayer(
+                payoff_matrix=game.payoff_matrices[i], 
+                num_actions=game.num_actions[i], 
+                player_index=i, 
+                eta=learning_rate
+            ) 
+            for i in range(game.num_players)
         ]
 
     def get_name(self):
@@ -109,24 +87,36 @@ class SwapRegretSolver:
         Returns:
         - dict: An approximate correlated equilibrium as a probability distribution.
         """
-        empirical_distribution = {}
-        action_counts = {}
-
-        for _ in range(self.T):
-            # Sample actions for each player
-            action_profile = tuple(player.sample_action() for player in self.players)
-
-            # Update action counts
-            if action_profile not in action_counts:
-                action_counts[action_profile] = 0
-            action_counts[action_profile] += 1
-
-            # Update each player with the joint action profile
+        # Run the swap regret algorithm for T iterations
+        for i in range(self.T):
+            # breakFlag = True
+            # Sample actions for all players
+            action_profile = tuple(
+                player.sample_action() for player in self.players
+            )
+            
+            # Update each player's distribution based on the observed action profile
             for player in self.players:
-                player.update(action_profile)
+                # original_weights = player.get_distribution().copy()
+                player.update_distributions(action_profile)
+                # new_weights = player.get_distribution().copy()
+                # if i < 100 or np.any(np.abs(original_weights - new_weights)) > 1e-6:
+                #     if (np.abs(original_weights[0] - new_weights[0]) > 1e-6):
+                #         print(f"Player {player.player_index} difference: {original_weights - new_weights}")
+                #     if (np.abs(original_weights[1] - new_weights[1]) > 1e-6):
+                #         print(f"Player {player.player_index} difference: {original_weights - new_weights}")
+                #     breakFlag = False
+                # else:
+                #     print(f"Player {player.player_index} difference: {original_weights - new_weights}")
+                #     print(f"Breaking at iteration {i}")
 
-        # Normalize action counts to form the empirical distribution
-        for action_profile, count in action_counts.items():
-            empirical_distribution[action_profile] = count / self.T
-
-        return empirical_distribution
+            # if breakFlag:
+            #     break
+        
+        # Compute the final strategy profile
+        strategy_profile = {
+            i: self.players[i].get_distribution() 
+            for i in range(len(self.players))
+        }
+        
+        return strategy_profile

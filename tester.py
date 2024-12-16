@@ -16,13 +16,13 @@ def collect_violations(game, distribution, epsilon=1e-6):
     """
     violations = []
 
-    if not np.isclose(sum(distribution.values()), 1.0, atol=epsilon):
+    if not np.isclose(sum(distribution.values()), 1.0, atol=epsilon).any():
         violations.append("The probabilities do not sum to 1.")
         return violations
 
-    if any(prob < 0 for prob in distribution.values()):
-        violations.append("The distribution contains negative probabilities.")
-        return violations
+    # if np.any(prob < -epsilon for prob in distribution.values()):
+    #     violations.append("The distribution contains negative probabilities.")
+    #     return violations
 
     for player in range(game.num_players):
         for current_action in range(game.num_actions[player]):
@@ -31,6 +31,7 @@ def collect_violations(game, distribution, epsilon=1e-6):
                     lhs = 0
                     rhs = 0
                     for joint_action, prob in distribution.items():
+                        print(prob)
                         if prob > 0:
                             payoff_current = game.payoff_matrices[player][joint_action]
                             joint_action_alt = list(joint_action)
@@ -134,36 +135,34 @@ def benchmark_solvers(game, solvers, welfare_func):
 def main():
     file_path = "benchmarking.csv"
     game = Game(2, [2, 2], game_type=Game.CHICKEN)
-    print(game, '\n')
+    print(game)
 
     lp_solver = LinearProgrammingSolver(game)
     lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
+    sr_solver = SwapRegretSolver(game, T=10000, learning_rate=0.1)
 
 
-    print(lp_welfare_solver.solve())
+    # print(lp_welfare_solver.solve())
+    # print(lp_solver.solve())
+    # print(sr_solver.solve())
 
     
-    # file_path = "benchmarking.csv"
-    # game = Game(2, [2, 2], game_type=Game.RANDOM)
+    file_path = "benchmarking.csv"
 
-    # lp_solver = LinearProgrammingSolver(game)
-    # lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)
-    # sr_solver = SwapRegretSolver(game, T=1000, learning_rate=0.1)
+    solvers = [lp_solver, lp_welfare_solver, sr_solver]
 
-    # solvers = [lp_solver, lp_welfare_solver, sr_solver]
+    results = benchmark_solvers(game, solvers, social_welfare)
 
-    # results = benchmark_solvers(game, solvers, social_welfare)
+    # log results
+    with open(file_path, "w") as f:
+        f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
+        for solver, result in results.items():
+            runtime = result["runtime"]
+            violations = len(result["violations"])
+            welfare = result["welfare"]
+            f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
 
-    # # log results
-    # with open(file_path, "w") as f:
-    #     f.write("NPlayers,MaxNActions,Solver,Runtime,Violations,Welfare\n")
-    #     for solver, result in results.items():
-    #         runtime = result["runtime"]
-    #         violations = len(result["violations"])
-    #         welfare = result["welfare"]
-    #         f.write(f"{game.num_players},{max(game.num_actions)},{solver},{runtime},{violations},{welfare}\n")
-
-    # print("Benchmarking complete. Results logged to benchmarking.csv.")
+    print("Benchmarking complete. Results logged to benchmarking.csv.")
 
 if __name__ == "__main__":
     main()
