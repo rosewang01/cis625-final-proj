@@ -1,7 +1,6 @@
 import numpy as np
 import pulp
-import itertools
-
+from pulp import PULP_CBC_CMD
 class LinearProgrammingSolver:
     def __init__(self, game, maximize_welfare=False):
         """
@@ -59,7 +58,7 @@ class LinearProgrammingSolver:
         else:
             prob += 0, "Dummy_Objective"
 
-        status = prob.solve()
+        status = prob.solve(PULP_CBC_CMD(msg=False))
 
         # for i in range(self.game.num_players):
         #     for a_i in range(self.game.num_actions[i]):

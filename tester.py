@@ -153,8 +153,10 @@ def main():
         f.write("NPlayers,MaxNActions,Solver,Runtime,MaxViolation,NViolations,Welfare\n")
     
     for i in range(4):
+        print(f"Benchmarking for {nplayers_arr[i]} players and {nactions_arr[i]} actions...")
         nplayers = nplayers_arr[i]
         nactions = nactions_arr[i]
+        # for i in range(10):
         game = Game(nplayers, [nactions] * nplayers, game_type=Game.RANDOM)
         lp_solver = LinearProgrammingSolver(game)
         lp_welfare_solver = LinearProgrammingSolver(game, maximize_welfare=True)

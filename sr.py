@@ -106,7 +106,7 @@ class SwapRegretSolver:
         - learning_rate (float): Step size for adjusting probabilities.
         """
         self.game = game
-        self.T = T
+        self.epsilon = epsilon
 
         # For a target epsilon-approx CE, adjust the solvers epsilon to be such that
         # The algo will have epsilon regret after losses are converted back from [0,1] to payoffs
