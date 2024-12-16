@@ -97,7 +97,7 @@ class SwapRegretPlayer:
 
 
 class SwapRegretSolver:
-    def __init__(self, game: Game, T=10000, learning_rate=None):
+    def __init__(self, game: Game, T=None, learning_rate=None, epsilon=0.01):
         """
         Initialize the Swap Regret Solver.
 
@@ -108,14 +108,19 @@ class SwapRegretSolver:
         """
         self.game = game
         self.T = T
-
+        self.epsilon = epsilon
         self.num_players = game.num_players
         self.num_actions = game.num_actions
 
+        if T:
+            self.T = T
+        else:
+            self.T = int((4 * (np.max(self.num_actions) ** 2) * math.log(np.max(self.num_actions))) / (self.epsilon ** 2))
+        
         if learning_rate:
             self.learning_rate = learning_rate
         else:
-            self.learning_rate = math.sqrt(math.log(np.max(self.num_actions))/T)
+            self.learning_rate = math.sqrt(math.log(np.max(self.num_actions))/self.T)
         self.players = [
             SwapRegretPlayer(game.get_payoff_matrix(player), game.num_actions[player], player, eta=self.learning_rate)
             for player in range(self.num_players)
