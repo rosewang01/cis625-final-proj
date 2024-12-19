@@ -25,6 +25,6 @@ If you'd like a quick start to your conda environment, run either of the followi
 - `conda create -n <environment-name> --file env/environment.yml python=3.10`
 
 ### Benchmarking
-All benchmarking logs are stored in the `log/` folder. All analyses on the logs are in the `benchmarking.ipynb` notebook. Unit tests for specific games are in `unittests.py` and the centralized benchmarking framework is in `benchmarker.py` and `tester.py`
+All benchmarking logs are stored in the `logs/` folder. All analyses on the logs are in the `benchmarking.ipynb` notebook. Unit tests for specific games are in `unittests.py` and the centralized benchmarking framework is in `benchmarker.py` and `tester.py`
 
 Source code for the `Game` class is in `game.py`, and the solvers are outlined in `lp.py` for linear programming and `sr.py` for swap regret.
